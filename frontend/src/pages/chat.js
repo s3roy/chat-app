@@ -1,7 +1,7 @@
-import { useEffect, useState, useRef } from 'react';
-import io from 'socket.io-client';
-import { useRouter } from 'next/router';
-import { format, isSameDay } from 'date-fns';
+import { useEffect, useState, useRef } from "react";
+import io from "socket.io-client";
+import { useRouter } from "next/router";
+import { format, isSameDay } from "date-fns";
 import {
   Box,
   Button,
@@ -16,83 +16,89 @@ import {
   Divider,
   Badge,
   Spinner,
-} from '@chakra-ui/react';
+} from "@chakra-ui/react";
 
-const socket = io('http://localhost:3001');
+const socket = io(process.env.BACKEND_URL);
 
 export default function Chat() {
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
   const [userStatuses, setUserStatuses] = useState({});
-  const [typingStatus, setTypingStatus] = useState('');
-  const [username, setUsername] = useState('');
+  const [typingStatus, setTypingStatus] = useState("");
+  const [username, setUsername] = useState("");
   const router = useRouter();
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
-    const storedUsername = localStorage.getItem('username');
+    const storedUsername = localStorage.getItem("username");
     if (!storedUsername) {
-      router.push('/auth');
+      router.push("/auth");
     } else {
       setUsername(storedUsername);
-      socket.emit('user connected', storedUsername);
-    }
+      socket.emit("user connected", storedUsername);
 
-    socket.on('initial messages', (initialMessages) => {
-      const filteredMessages = initialMessages.filter(
-        (msg) => msg.username === 'admin' || msg.username === storedUsername
-      );
-      setMessages(filteredMessages);
-    });
+      socket.on("connect", () => {
+        socket.emit("request initial messages");
+      });
 
-    socket.on('chat message', (msg) => {
-      if (msg.username === 'admin' || msg.username === username) {
-        setMessages((prevMessages) => [...prevMessages, msg]);
-        scrollToBottom();
-        // Display browser notification
-        if (Notification.permission === 'granted') {
-          new Notification('New Message', {
-            body: `${msg.username}: ${msg.message}`,
-          });
+      socket.on("initial messages", (initialMessages) => {
+        const filteredMessages = initialMessages.filter(
+          (msg) => msg.username === "admin" || msg.username === storedUsername
+        );
+        setMessages(filteredMessages);
+      });
+
+      socket.on("chat message", (msg) => {
+        if (msg.username === "admin" || msg.username === username) {
+          setMessages((prevMessages) => [...prevMessages, msg]);
+          scrollToBottom();
+          // Display browser notification
+          if (Notification.permission === "granted") {
+            new Notification("New Message", {
+              body: `${msg.username}: ${msg.message}`,
+            });
+          }
         }
-      }
-    });
+      });
 
-    socket.on('user status', (status) => {
-      setUserStatuses((prevStatuses) => ({
-        ...prevStatuses,
-        [status.username]: status.online,
-      }));
-    });
+      socket.on("user status", (status) => {
+        setUserStatuses((prevStatuses) => ({
+          ...prevStatuses,
+          [status.username]: status.online,
+        }));
+      });
 
-    socket.on('typing', (username) => {
-      if (username !== storedUsername) {
-        setTypingStatus(`${username} is typing...`);
-        setTimeout(() => setTypingStatus(''), 3000);
-      }
-    });
+      socket.on("typing", (username) => {
+        if (username !== storedUsername) {
+          setTypingStatus(`${username} is typing...`);
+          setTimeout(() => setTypingStatus(""), 3000);
+        }
+      });
 
-    return () => {
-      socket.off('chat message');
-      socket.off('user status');
-      socket.off('typing');
-    };
+      return () => {
+        socket.off("connect");
+        socket.off("initial messages");
+        socket.off("chat message");
+        socket.off("user status");
+        socket.off("typing");
+      };
+    }
   }, [router, username]);
 
   const sendMessage = (e) => {
     e.preventDefault();
     if (message) {
-      socket.emit('chat message', { username, message });
-      setMessage('');
+      socket.emit("chat message", { username, message });
+      setMessage("");
     }
   };
 
   const handleTyping = () => {
-    socket.emit('typing', username);
+    socket.emit("typing", username);
   };
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
@@ -100,7 +106,7 @@ export default function Chat() {
   }, [messages]);
 
   const requestNotificationPermission = () => {
-    if (Notification.permission !== 'granted') {
+    if (Notification.permission !== "granted") {
       Notification.requestPermission();
     }
   };
@@ -111,14 +117,15 @@ export default function Chat() {
 
     messages.forEach((msg, index) => {
       const messageDate = new Date(msg.timestamp);
-      const isNewDay = !lastMessageDate || !isSameDay(lastMessageDate, messageDate);
+      const isNewDay =
+        !lastMessageDate || !isSameDay(lastMessageDate, messageDate);
 
       if (isNewDay) {
         messageElements.push(
           <Center key={`date-${index}`} my={4}>
             <Divider />
             <Text mx={2} fontSize="sm" color="gray.500">
-              {format(messageDate, 'eeee, MMMM d')}
+              {format(messageDate, "eeee, MMMM d")}
             </Text>
             <Divider />
           </Center>
@@ -127,16 +134,16 @@ export default function Chat() {
 
       messageElements.push(
         <ListItem key={msg.id} mb={3}>
-          <Flex justify={msg.username === username ? 'flex-end' : 'flex-start'}>
+          <Flex justify={msg.username === username ? "flex-end" : "flex-start"}>
             <Box
-              bg={msg.username === username ? 'green.100' : 'gray.200'}
+              bg={msg.username === username ? "green.100" : "gray.200"}
               p={3}
               borderRadius="md"
               maxWidth="70%"
             >
               <Text>{msg.message}</Text>
-              <Text fontSize="xs" color="gray.500" mt={1} textAlign="right">
-                {format(messageDate, 'p')}
+              <Text fontSize="xx-small" color="gray.500" mt={1} textAlign="right">
+                {format(messageDate, "p")}
               </Text>
             </Box>
           </Flex>
@@ -150,14 +157,19 @@ export default function Chat() {
   };
 
   return (
-    <Flex direction="column" height="100vh" bg="gray.100" onLoad={requestNotificationPermission}>
+    <Flex
+      direction="column"
+      height="100vh"
+      bg="gray.100"
+      onLoad={requestNotificationPermission}
+    >
       <Box bg="green.500" p={4} color="white">
-        <Text fontSize="xl">Chat with Admin</Text>
+        <Text fontSize="xl">Souvik</Text>
       </Box>
       <Center py={2}>
-        {userStatuses['admin'] && (
+        {userStatuses["admin"] && (
           <Badge colorScheme="green" mr={2}>
-            Admin Online
+            Souvik Online
           </Badge>
         )}
         {typingStatus && (

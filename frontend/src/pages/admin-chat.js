@@ -18,7 +18,7 @@ import {
   Spinner,
 } from '@chakra-ui/react';
 
-const socket = io('http://localhost:3001');
+const socket = io(process.env.BACKEND_URL);
 
 export default function AdminChat() {
   const [message, setMessage] = useState('');
@@ -158,11 +158,13 @@ export default function AdminChat() {
         <Text fontSize="xl">Admin Chat</Text>
       </Box>
       <Center py={2}>
-        {Object.keys(userStatuses).filter(username => username !== adminUsername && userStatuses[username]).map(username => (
-          <Badge colorScheme="green" mr={2} key={username}>
-            {username} Online
-          </Badge>
-        ))}
+        {Object.keys(userStatuses)
+          .filter(username => username !== adminUsername && userStatuses[username])
+          .map(username => (
+            <Badge colorScheme="green" mr={2} key={username}>
+              {username} Online
+            </Badge>
+          ))}
         {typingStatus && (
           <Flex align="center">
             <Spinner size="sm" mr={2} />

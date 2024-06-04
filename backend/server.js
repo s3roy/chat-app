@@ -2,19 +2,20 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const { Sequelize, DataTypes } = require('sequelize');
-const cors = require('cors'); // Import cors
+const cors = require('cors');
+require('dotenv').config();
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3000", // Allow requests from this origin
+    origin: process.env.CORS_ORIGIN,
     methods: ["GET", "POST"],
   }
 });
 
-const sequelize = new Sequelize('chat_app', 'root', 'root', {
-  host: 'localhost',
+const sequelize = new Sequelize(process.env.DATABASE_NAME, process.env.DATABASE_USER, process.env.DATABASE_PASSWORD, {
+  host: process.env.DATABASE_HOST,
   dialect: 'mysql'
 });
 
@@ -45,14 +46,29 @@ const User = sequelize.define('User', {
   }
 });
 
-sequelize.sync();
+sequelize.sync().then(() => {
+  server.listen(process.env.PORT || 3001, () => {
+    console.log(`listening on *:${process.env.PORT || 3001}`);
+  });
+});
 
-io.on('connection', (socket) => {
+io.on('connection', async (socket) => {
   console.log('a user connected');
 
+  // Fetch all messages and emit them to the newly connected client
+  const messages = await Message.findAll();
+  socket.emit('initial messages', messages);
+
   socket.on('user connected', async (username) => {
+    socket.username = username; // Save the username to the socket object
     await User.upsert({ username, online: true });
     io.emit('user status', { username, online: true });
+
+    // Check if admin is online and emit status
+    const admin = await User.findOne({ where: { username: 'admin' } });
+    if (admin) {
+      socket.emit('user status', { username: 'admin', online: admin.online });
+    }
   });
 
   socket.on('disconnect', async () => {
@@ -70,8 +86,8 @@ io.on('connection', (socket) => {
     const newMessage = await Message.create({ username, message });
     io.emit('chat message', newMessage);
   });
-});
 
-server.listen(3001, () => {
-  console.log('listening on *:3001');
+  socket.on('typing', (username) => {
+    socket.broadcast.emit('typing', username);
+  });
 });

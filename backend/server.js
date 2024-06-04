@@ -1,12 +1,19 @@
 const express = require('express');
-const http = require('http');
+const fs = require('fs');
+const https = require('https');
 const { Server } = require('socket.io');
 const { Sequelize, DataTypes } = require('sequelize');
 const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
-const server = http.createServer(app);
+app.use(cors());
+
+const server = https.createServer({
+  key: fs.readFileSync('/etc/nginx/ssl/nginx.key'),
+  cert: fs.readFileSync('/etc/nginx/ssl/nginx.crt')
+}, app);
+
 const io = new Server(server, {
   cors: {
     origin: process.env.CORS_ORIGIN,

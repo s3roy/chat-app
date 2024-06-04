@@ -7,7 +7,11 @@ const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: process.env.CORS_ORIGIN,
+  methods: ["GET", "POST"],
+  credentials: true
+}));
 
 const server = https.createServer({
   key: fs.readFileSync('/etc/nginx/ssl/nginx.key'),
@@ -18,6 +22,7 @@ const io = new Server(server, {
   cors: {
     origin: process.env.CORS_ORIGIN,
     methods: ["GET", "POST"],
+    credentials: true
   }
 });
 
@@ -62,16 +67,14 @@ sequelize.sync().then(() => {
 io.on('connection', async (socket) => {
   console.log('a user connected');
 
-  // Fetch all messages and emit them to the newly connected client
   const messages = await Message.findAll();
   socket.emit('initial messages', messages);
 
   socket.on('user connected', async (username) => {
-    socket.username = username; // Save the username to the socket object
+    socket.username = username;
     await User.upsert({ username, online: true });
     io.emit('user status', { username, online: true });
 
-    // Check if admin is online and emit status
     const admin = await User.findOne({ where: { username: 'admin' } });
     if (admin) {
       socket.emit('user status', { username: 'admin', online: admin.online });

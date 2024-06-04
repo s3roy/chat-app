@@ -1,6 +1,5 @@
 const express = require('express');
-const fs = require('fs');
-const https = require('https');
+const http = require('http');
 const { Server } = require('socket.io');
 const { Sequelize, DataTypes } = require('sequelize');
 const cors = require('cors');
@@ -13,10 +12,7 @@ app.use(cors({
   credentials: true
 }));
 
-const server = https.createServer({
-  key: fs.readFileSync('/etc/nginx/ssl/nginx.key'),
-  cert: fs.readFileSync('/etc/nginx/ssl/nginx.crt')
-}, app);
+const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {

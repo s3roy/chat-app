@@ -52,7 +52,6 @@ export default function Chat() {
         if (msg.username === "admin" || msg.username === username) {
           setMessages((prevMessages) => [...prevMessages, msg]);
           scrollToBottom();
-          // Display browser notification
           if (Notification.permission === "granted") {
             new Notification("New Message", {
               body: `${msg.username}: ${msg.message}`,
@@ -202,6 +201,7 @@ export default function Chat() {
             placeholder="Type a message"
             bg="white"
             onKeyPress={handleTyping}
+            flexGrow={1}
           />
           <Button type="submit" colorScheme="green">
             Send

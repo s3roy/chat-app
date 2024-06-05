@@ -16,6 +16,7 @@ import {
   Divider,
   Badge,
   Spinner,
+  useColorModeValue,
 } from "@chakra-ui/react";
 
 const socket = io(process.env.BACKEND_URL);
@@ -28,6 +29,12 @@ export default function Chat() {
   const [username, setUsername] = useState("");
   const router = useRouter();
   const messagesEndRef = useRef(null);
+
+  const bgColor = useColorModeValue("gray.100", "gray.900");
+  const msgBgColor = useColorModeValue("white", "gray.800");
+  const msgTextColor = useColorModeValue("gray.700", "gray.200");
+  const myMsgBgColor = useColorModeValue("pink.100", "pink.700");
+  const myMsgTextColor = useColorModeValue("gray.800", "gray.200");
 
   useEffect(() => {
     const storedUsername = localStorage.getItem("username");
@@ -115,59 +122,59 @@ export default function Chat() {
     let lastMessageDate = null;
 
     messages.forEach((msg, index) => {
-      const messageDate = new Date(msg.timestamp);
-      const isNewDay =
-        !lastMessageDate || !isSameDay(lastMessageDate, messageDate);
+        const messageDate = new Date(msg.timestamp);
+        const isNewDay = !lastMessageDate || !isSameDay(lastMessageDate, messageDate);
 
-      if (isNewDay) {
+        if (isNewDay) {
+            messageElements.push(
+                <Center key={`date-${index}`} my={4}>
+                    <Divider />
+                    <Text mx={2} fontSize="sm" color="gray.500">
+                        {format(messageDate, "eeee, MMMM d")}
+                    </Text>
+                    <Divider />
+                </Center>
+            );
+        }
+
         messageElements.push(
-          <Center key={`date-${index}`} my={4}>
-            <Divider />
-            <Text mx={2} fontSize="sm" color="gray.500">
-              {format(messageDate, "eeee, MMMM d")}
-            </Text>
-            <Divider />
-          </Center>
+            <ListItem key={msg.id} mb={3}>
+                <Flex justify={msg.username === username ? "flex-end" : "flex-start"}>
+                    <Box
+                        bg={msg.username === username ? "pink.100" : "blue.100"}
+                        p={3}
+                        borderRadius="md"
+                        maxWidth="70%"
+                    >
+                        <Text>{msg.message}</Text>
+                        <Text fontSize="xx-small" color="gray.500" mt={1} textAlign="right">
+                            {format(messageDate, "p")}
+                        </Text>
+                    </Box>
+                </Flex>
+            </ListItem>
         );
-      }
 
-      messageElements.push(
-        <ListItem key={msg.id} mb={3}>
-          <Flex justify={msg.username === username ? "flex-end" : "flex-start"}>
-            <Box
-              bg={msg.username === username ? "green.100" : "gray.200"}
-              p={3}
-              borderRadius="md"
-              maxWidth="70%"
-            >
-              <Text>{msg.message}</Text>
-              <Text fontSize="xx-small" color="gray.500" mt={1} textAlign="right">
-                {format(messageDate, "p")}
-              </Text>
-            </Box>
-          </Flex>
-        </ListItem>
-      );
-
-      lastMessageDate = messageDate;
+        lastMessageDate = messageDate;
     });
 
     return messageElements;
-  };
+};
+
 
   return (
     <Flex
       direction="column"
       height="100vh"
-      bg="gray.100"
+      bg={bgColor}
       onLoad={requestNotificationPermission}
     >
-      <Box bg="green.500" p={4} color="white">
+      <Box bg="pink.500" p={4} color="white">
         <Text fontSize="xl">Souvik</Text>
       </Box>
       <Center py={2}>
         {userStatuses["admin"] && (
-          <Badge colorScheme="green" mr={2}>
+          <Badge colorScheme="pink" mr={2}>
             Souvik Online
           </Badge>
         )}
@@ -184,14 +191,14 @@ export default function Chat() {
         p={4}
         flex="1"
         overflowY="auto"
-        bg="white"
+        bg={msgBgColor}
       >
         <List spacing={3}>
           {renderMessages()}
           <div ref={messagesEndRef} />
         </List>
       </VStack>
-      <Box p={4} bg="gray.100">
+      <Box p={4} bg={bgColor}>
         <HStack as="form" onSubmit={sendMessage} spacing={4}>
           <Input
             id="m"
@@ -203,7 +210,7 @@ export default function Chat() {
             onKeyPress={handleTyping}
             flexGrow={1}
           />
-          <Button type="submit" colorScheme="green">
+          <Button type="submit" colorScheme="pink">
             Send
           </Button>
         </HStack>

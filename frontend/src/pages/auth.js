@@ -1,10 +1,17 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { Box, Button, Input, VStack, Text } from '@chakra-ui/react';
 
 export default function Auth() {
   const [username, setUsername] = useState('');
   const router = useRouter();
+
+  useEffect(() => {
+    const storedUsername = localStorage.getItem('username');
+    if (storedUsername) {
+      router.push('/chat');
+    }
+  }, [router]);
 
   const handleLogin = () => {
     localStorage.setItem('username', username);

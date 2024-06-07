@@ -74,9 +74,9 @@ export default function Chat() {
         }));
       });
 
-      socket.on("typing", (username) => {
-        if (username !== storedUsername) {
-          setTypingStatus(`${username} is typing...`);
+      socket.on("typing", (data) => {
+        if (data.username !== storedUsername) {
+          setTypingStatus(`${data.username} is typing: ${data.message}`);
           setTimeout(() => setTypingStatus(""), 3000);
         }
       });
@@ -99,8 +99,9 @@ export default function Chat() {
     }
   };
 
-  const handleTyping = () => {
-    socket.emit("typing", username);
+  const handleTyping = (e) => {
+    setMessage(e.target.value);
+    socket.emit("typing", { username, message: e.target.value });
   };
 
   const scrollToBottom = () => {
@@ -122,45 +123,46 @@ export default function Chat() {
     let lastMessageDate = null;
 
     messages.forEach((msg, index) => {
-        const messageDate = new Date(msg.timestamp);
-        const isNewDay = !lastMessageDate || !isSameDay(lastMessageDate, messageDate);
+      const messageDate = new Date(msg.timestamp);
+      const isNewDay = !lastMessageDate || !isSameDay(lastMessageDate, messageDate);
 
-        if (isNewDay) {
-            messageElements.push(
-                <Center key={`date-${index}`} my={4}>
-                    <Divider />
-                    <Text mx={2} fontSize="sm" color="gray.500">
-                        {format(messageDate, "eeee, MMMM d")}
-                    </Text>
-                    <Divider />
-                </Center>
-            );
-        }
-
+      if (isNewDay) {
         messageElements.push(
-            <ListItem key={msg.id} mb={3}>
-                <Flex justify={msg.username === username ? "flex-end" : "flex-start"}>
-                    <Box
-                        bg={msg.username === username ? "pink.100" : "blue.100"}
-                        p={3}
-                        borderRadius="md"
-                        maxWidth="70%"
-                    >
-                        <Text>{msg.message}</Text>
-                        <Text fontSize="xx-small" color="gray.500" mt={1} textAlign="right">
-                            {format(messageDate, "p")}
-                        </Text>
-                    </Box>
-                </Flex>
-            </ListItem>
+          <Center key={`date-${index}`} my={4}>
+            <Divider />
+            <Text mx={2} fontSize="sm" color="gray.500">
+              {format(messageDate, "eeee, MMMM d")}
+            </Text>
+            <Divider />
+          </Center>
         );
+      }
 
-        lastMessageDate = messageDate;
+      messageElements.push(
+        <ListItem key={msg.id} mb={3}>
+          <Flex justify={msg.username === username ? "flex-end" : "flex-start"}>
+            <Box
+              bg={msg.username === username ? myMsgBgColor : msgBgColor}
+              p={3}
+              borderRadius="md"
+              maxWidth="70%"
+            >
+              <Text color={msg.username === username ? myMsgTextColor : msgTextColor}>
+                {msg.message}
+              </Text>
+              <Text fontSize="xx-small" color="gray.500" mt={1} textAlign="right">
+                {format(messageDate, "p")}
+              </Text>
+            </Box>
+          </Flex>
+        </ListItem>
+      );
+
+      lastMessageDate = messageDate;
     });
 
     return messageElements;
-};
-
+  };
 
   return (
     <Flex
@@ -204,10 +206,9 @@ export default function Chat() {
             id="m"
             autoComplete="off"
             value={message}
-            onChange={(e) => setMessage(e.target.value)}
+            onChange={handleTyping}
             placeholder="Type a message"
             bg="white"
-            onKeyPress={handleTyping}
             flexGrow={1}
           />
           <Button type="submit" colorScheme="pink">

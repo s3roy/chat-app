@@ -54,10 +54,21 @@ const User = sequelize.define('User', {
   }
 });
 
+// Sync models and start the server
 sequelize.sync().then(() => {
   server.listen(process.env.PORT || 3001, () => {
     console.log(`listening on *:${process.env.PORT || 3001}`);
   });
+});
+
+// Endpoint to delete all messages
+app.delete('/messages', async (req, res) => {
+  try {
+    await Message.destroy({ where: {} });
+    res.status(200).send('All messages deleted');
+  } catch (error) {
+    res.status(500).send('Error deleting messages');
+  }
 });
 
 io.on('connection', async (socket) => {
@@ -93,7 +104,8 @@ io.on('connection', async (socket) => {
     io.emit('chat message', newMessage);
   });
 
-  socket.on('typing', (username) => {
-    socket.broadcast.emit('typing', username);
+  socket.on('typing', (data) => {
+    const { username, message } = data;
+    socket.broadcast.emit('typing', { username, message });
   });
 });

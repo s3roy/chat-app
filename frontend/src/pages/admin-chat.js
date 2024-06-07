@@ -60,9 +60,9 @@ export default function AdminChat() {
       }));
     });
 
-    socket.on('typing', (username) => {
-      if (username !== adminUsername) {
-        setTypingStatus(`${username} is typing...`);
+    socket.on('typing', (data) => {
+      if (data.username !== adminUsername) {
+        setTypingStatus(`${data.username} is typing: ${data.message}`);
         setTimeout(() => setTypingStatus(''), 3000);
       }
     });
@@ -82,8 +82,9 @@ export default function AdminChat() {
     }
   };
 
-  const handleTyping = () => {
-    socket.emit('typing', adminUsername);
+  const handleTyping = (e) => {
+    setMessage(e.target.value);
+    socket.emit('typing', { username: adminUsername, message: e.target.value });
   };
 
   const scrollToBottom = () => {
@@ -191,10 +192,9 @@ export default function AdminChat() {
             id="m"
             autoComplete="off"
             value={message}
-            onChange={(e) => setMessage(e.target.value)}
+            onChange={handleTyping}
             placeholder="Type a message"
             bg="white"
-            onKeyPress={handleTyping}
           />
           <Button type="submit" colorScheme="blue">
             Send

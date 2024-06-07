@@ -35,8 +35,8 @@ export default function Chat() {
   const msgTextColor = useColorModeValue("gray.700", "gray.200");
   const myMsgBgColor = useColorModeValue("pink.100", "pink.700");
   const myMsgTextColor = useColorModeValue("gray.800", "gray.200");
-  const adminMsgBgColor = useColorModeValue("blue.100", "blue.700");
-  const adminMsgTextColor = useColorModeValue("white", "gray.200");
+  const adminMsgBgColor = useColorModeValue("blue.100", "blue.500");
+  const adminMsgTextColor = useColorModeValue("black", "white");
 
   useEffect(() => {
     const storedUsername = localStorage.getItem("username");

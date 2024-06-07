@@ -35,6 +35,8 @@ export default function Chat() {
   const msgTextColor = useColorModeValue("gray.700", "gray.200");
   const myMsgBgColor = useColorModeValue("pink.100", "pink.700");
   const myMsgTextColor = useColorModeValue("gray.800", "gray.200");
+  const adminMsgBgColor = useColorModeValue("blue.100", "blue.700");
+  const adminMsgTextColor = useColorModeValue("white", "gray.200");
 
   useEffect(() => {
     const storedUsername = localStorage.getItem("username");
@@ -142,12 +144,12 @@ export default function Chat() {
         <ListItem key={msg.id} mb={3}>
           <Flex justify={msg.username === username ? "flex-end" : "flex-start"}>
             <Box
-              bg={msg.username === username ? myMsgBgColor : msgBgColor}
+              bg={msg.username === username ? myMsgBgColor : msg.username === "admin" ? adminMsgBgColor : msgBgColor}
               p={3}
               borderRadius="md"
               maxWidth="70%"
             >
-              <Text color={msg.username === username ? myMsgTextColor : msgTextColor}>
+              <Text color={msg.username === username ? myMsgTextColor : msg.username === "admin" ? adminMsgTextColor : msgTextColor}>
                 {msg.message}
               </Text>
               <Text fontSize="xx-small" color="gray.500" mt={1} textAlign="right">
